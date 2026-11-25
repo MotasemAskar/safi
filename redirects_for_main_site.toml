@@ -39,3 +39,8 @@
   from = "/safi/8"
   to = "/safi/p/8/"
   status = 301
+
+[[redirects]]
+  from = "/safi/9"
+  to = "/safi/p/9/"
+  status = 301

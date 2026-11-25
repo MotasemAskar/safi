@@ -158,6 +158,8 @@ def load_items():
         it["_dir"] = d
         p = d / "prompt.md"
         it["_prompt"] = p.read_text(encoding="utf-8") if p.exists() else ""
+        p2 = d / "prompt2.md"
+        it["_prompt2"] = p2.read_text(encoding="utf-8") if p2.exists() else ""
         it["_skill"] = (d / "skill").is_dir()
         items.append(it)
     return sorted(items, key=lambda x: x["n"])
@@ -186,6 +188,10 @@ def item_page(it, prev, nxt):
         B.append(f'<section>{head}<div class="pbox"><div class="bar"><button class="copy" data-for="p{n}">انسخ</button>{label}</div>'
                  f'<pre id="p{n}">{prompt_html(it["_prompt"])}</pre></div>'
                  + ('<p class="hint">عبّي الأماكن الملوّنة، والباقي خليه زي ما هو.</p>' if "[" in it["_prompt"] else "") + "</section>")
+    if it.get("_prompt2"):
+        head2 = f'<h2>{rich(it.get("prompt2_title", ""))}</h2>' if it.get("prompt2_title") else ""
+        B.append(f'<section>{head2}<div class="pbox"><div class="bar"><button class="copy" data-for="p{n}b">انسخ</button>{label}</div>'
+                 f'<pre id="p{n}b">{prompt_html(it["_prompt2"])}</pre></div></section>')
     for sec in it.get("sections", []):
         inner = (('<ol class="steps">' + "".join(f"<li><span>{rich(x)}</span></li>" for x in sec["steps"]) + "</ol>") if sec.get("steps")
                  else f'<p>{rich(sec.get("text", ""))}</p>')
