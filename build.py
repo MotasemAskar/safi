@@ -21,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 SITE = ROOT / "site"
-REPO = "https://github.com/BigS0MA/safi"
+REPO = "https://github.com/MotasemAskar/safi"
 BASE = os.environ.get("SAFI_BASE", "/safi/")          # where the library lives: motasem.ai/safi/
 ORIGIN = os.environ.get("SAFI_ORIGIN", "https://motasem.ai")
 KIND = {"prompt": "برومبت", "trick": "حيلة", "skill": "سكيل", "block": "إعدادات", "guide": "دليل"}
