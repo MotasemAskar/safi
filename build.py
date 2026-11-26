@@ -52,6 +52,7 @@ def prompt_html(text):
 
 
 CSS = """
+[hidden]{display:none!important}
 @font-face{font-family:Plex;src:url(/fonts/plex-arabic-regular.woff2) format('woff2');font-weight:400;font-display:swap}
 @font-face{font-family:Plex;src:url(/fonts/plex-arabic-bold.woff2) format('woff2');font-weight:700;font-display:swap}
 @font-face{font-family:Mono;src:url(/fonts/plex-mono-500.woff2) format('woff2');font-weight:500;font-display:swap}
