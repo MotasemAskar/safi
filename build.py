@@ -202,22 +202,39 @@ def item_page(it, prev, nxt):
         B.append(f'<section><img class="shot" src="{shot.name}" alt="مثال على النتيجة" loading="lazy"></section>')
     if it.get("tip"):
         B.append(f'<section><div class="tape"><b>نصيحة</b>{rich(it["tip"])}</div></section>')
-    nav = '<nav class="nav">' + (f'<a href="/p/{prev["n"]}/">→ {prev["n"]:02d} {rich(prev["title"])}</a>' if prev else "<span></span>") \
-        + (f'<a href="/p/{nxt["n"]}/">{nxt["n"]:02d} {rich(nxt["title"])} ←</a>' if nxt else '<a href="/">كل المكتبة ←</a>') + "</nav>"
+    nav = '<nav class="nav">' + (f'<a{gate(prev)} href="/p/{prev["n"]}/">→ {prev["n"]:02d} {rich(prev["title"])}</a>' if prev else "<span></span>") \
+        + (f'<a{gate(nxt)} href="/p/{nxt["n"]}/">{nxt["n"]:02d} {rich(nxt["title"])} ←</a>' if nxt else '<a href="/">كل المكتبة ←</a>') + "</nav>" + GATE_JS
     B.append(nav)
     (out / "index.html").write_text(page(f'{it["title"]} · صافي', it["hook"], "".join(B), f"/p/{n}/"), encoding="utf-8")
 
 
+def gate(it):
+    """Items show in lists and nav only from their publish time (Amman). Hidden by default, revealed by GATE_JS."""
+    at = it.get("publish_at")
+    if not at:
+        return ""
+    from datetime import datetime
+    return f' data-at="{int(datetime.fromisoformat(at).timestamp() * 1000)}" hidden'
+
+
+GATE_JS = ('<script>(function(){var next=0;document.querySelectorAll("[data-at]").forEach(function(e){'
+           'var at=+e.dataset.at;if(Date.now()>=at)e.hidden=false;else if(!next||at<next)next=at});'
+           'var s=document.getElementById("soon");if(s&&next&&!document.querySelector("a.card:not([hidden])")){'
+           's.hidden=false;s.querySelector("b").textContent=new Date(next).toLocaleDateString("ar",{weekday:"long",day:"numeric",month:"long",timeZone:"Asia/Amman"})}'
+           '})();</script>')
+
+
 def index_page(items):
     cards = "".join(
-        f'<a class="card" href="/p/{it["n"]}/"><span class="n">{it["n"]:02d}</span>'
+        f'<a class="card"{gate(it)} href="/p/{it["n"]}/"><span class="n">{it["n"]:02d}</span>'
         f'<span class="t">{rich(it["title"])}</span><span class="h">{rich(it["hook"])}</span>'
         f'<span class="m"><span class="chip ar ink">{KIND.get(it["kind"], "")}</span></span></a>'
         for it in items)
     body = ('<h1>انسخ، نزّل، <span class="hot">واشتغل</span>.</h1>'
             '<p class="lede">برومبتات وسكيلز لشغلك بالعربي، من كاروسيلات motasem.ai. كل وحدة بكبسة نسخ أو تنزيل.</p>'
             '<form class="go" id="go"><label for="gon">عندك رقم من كاروسيل؟</label><input id="gon" inputmode="numeric" placeholder="01" aria-label="رقم الكاروسيل"><button>افتح</button></form>'
-            f'<section class="list" aria-label="المكتبة">{cards}</section>')
+            f'<p class="lede" id="soon" hidden>أول عنصر بينزل <b></b> الساعة 6 المسا. تابع motasem.ai عشان ما يفوتك.</p>'
+            f'<section class="list" aria-label="المكتبة">{cards}</section>' + GATE_JS)
     (SITE / "index.html").write_text(page("صافي · motasem.ai", "برومبتات وسكيلز لشغلك بالعربي، بكبسة نسخ أو تنزيل.", body), encoding="utf-8")
 
 
