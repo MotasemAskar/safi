@@ -117,7 +117,8 @@ document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()
     const s=getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');s.removeAllRanges()}
   b.textContent='انتسخ ✓';b.classList.add('done');setTimeout(()=>{b.textContent='انسخ';b.classList.remove('done')},1800)}));
 const g=document.getElementById('go');if(g)g.addEventListener('submit',ev=>{ev.preventDefault();
-  const n=parseInt(document.getElementById('gon').value,10);if(n>0)location.href='/p/'+n+'/'});
+  const v=document.getElementById('gon').value.replace(/[٠-٩]/g,d=>d.charCodeAt(0)-1632).replace(/[۰-۹]/g,d=>d.charCodeAt(0)-1776).replace(/\\D/g,'');
+  const n=parseInt(v,10);if(n>0)location.href='/p/'+n+'/'});
 """
 
 
@@ -166,7 +167,7 @@ def load_items():
     return sorted(items, key=lambda x: x["n"])
 
 
-def item_page(it, prev, nxt):
+def item_page(it, prev, nxt, others=()):
     n, d = it["n"], it["_dir"]
     out = SITE / "p" / str(n)
     out.mkdir(parents=True, exist_ok=True)
@@ -206,7 +207,36 @@ def item_page(it, prev, nxt):
     nav = '<nav class="nav">' + (f'<a{gate(prev)} href="/p/{prev["n"]}/">→ {prev["n"]:02d} {rich(prev["title"])}</a>' if prev else "<span></span>") \
         + (f'<a{gate(nxt)} href="/p/{nxt["n"]}/">{nxt["n"]:02d} {rich(nxt["title"])} ←</a>' if nxt else '<a href="/">كل المكتبة ←</a>') + "</nav>" + GATE_JS
     B.append(nav)
-    (out / "index.html").write_text(page(f'{it["title"]} · صافي', it["hook"], "".join(B), f"/p/{n}/"), encoding="utf-8")
+    body = "".join(B)
+    if it.get("publish_at"):
+        box, js = wait_box(it, others)
+        body = box + f'<div id="body" hidden>{body}</div>' + js
+    (out / "index.html").write_text(page(f'{it["title"]} · صافي', it["hook"], body, f"/p/{n}/"), encoding="utf-8")
+
+
+def at_ms(it):
+    from datetime import datetime
+    return int(datetime.fromisoformat(it["publish_at"]).timestamp() * 1000) if it.get("publish_at") else 0
+
+
+def wait_box(it, others):
+    """Before publish_at: show 'not out yet' + date/time + follow button + latest released item, instead of the content."""
+    from datetime import datetime
+    n, h = it["n"], datetime.fromisoformat(it["publish_at"]).hour
+    when = f'{h - 12 if h > 12 else h} ' + ("المسا" if h >= 15 else "الظهر" if h >= 12 else "الصبح")
+    lst = json.dumps([[o["n"], at_ms(o), o["title"]] for o in others if o["n"] != n], ensure_ascii=False)
+    return (f'<div id="wait" hidden><span class="num">{n:02d}</span>'
+            f'<h1>الكاروسيل {n:02d} <span class="hot">لسا ما نزل</span>.</h1>'
+            f'<p class="lede">بينزل <b></b> الساعة {when}.</p>'
+            '<p style="margin-top:22px"><a class="btn" href="https://www.instagram.com/motasem.ai/">تابع motasem.ai عشان ما يفوتك</a></p>'
+            '<p class="lede" id="last" hidden style="margin-top:28px">لحد ما ينزل، جرّب: <a></a></p></div>',
+            f'<script>(function(){{var at={at_ms(it)},w=document.getElementById("wait"),b=document.getElementById("body");'
+            'if(Date.now()>=at){b.hidden=false;return}w.hidden=false;'
+            'w.querySelector("b").textContent=new Date(at).toLocaleDateString("ar",{weekday:"long",day:"numeric",month:"long",timeZone:"Asia/Amman"});'
+            f'var best=null;{lst}.forEach(function(x){{if(Date.now()>=x[1]&&(!best||x[0]>best[0]))best=x}});'
+            'if(best){var p=document.getElementById("last"),a=p.querySelector("a");p.hidden=false;'
+            "a.href='/p/'+best[0]+'/';a.textContent=(best[0]<10?'0':'')+best[0]+' · '+best[2]}"
+            '})();</script>')
 
 
 def gate(it):
@@ -243,7 +273,7 @@ def main():
     items = load_items()
     shutil.rmtree(SITE / "p", ignore_errors=True)
     for i, it in enumerate(items):
-        item_page(it, items[i - 1] if i else None, items[i + 1] if i + 1 < len(items) else None)
+        item_page(it, items[i - 1] if i else None, items[i + 1] if i + 1 < len(items) else None, items)
     index_page(items)
     (SITE / "favicon.svg").write_text(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#FF5A1F"/>'

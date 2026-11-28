@@ -78,5 +78,6 @@ document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()
     const s=getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');s.removeAllRanges()}
   b.textContent='انتسخ ✓';b.classList.add('done');setTimeout(()=>{b.textContent='انسخ';b.classList.remove('done')},1800)}));
 const g=document.getElementById('go');if(g)g.addEventListener('submit',ev=>{ev.preventDefault();
-  const n=parseInt(document.getElementById('gon').value,10);if(n>0)location.href='/safi/p/'+n+'/'});
+  const v=document.getElementById('gon').value.replace(/[٠-٩]/g,d=>d.charCodeAt(0)-1632).replace(/[۰-۹]/g,d=>d.charCodeAt(0)-1776).replace(/\D/g,'');
+  const n=parseInt(v,10);if(n>0)location.href='/safi/p/'+n+'/'});
 </script></body></html>
